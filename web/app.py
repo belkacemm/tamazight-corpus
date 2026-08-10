@@ -1,7 +1,7 @@
 from pathlib import Path
 
 from flask import Flask, render_template, redirect, url_for
-from forms import CreateCorpusForm
+from .forms import CreateCorpusForm
 
 from tamazight_corpus.models.config import CorpusConfig
 from tamazight_corpus.models.project import Project
