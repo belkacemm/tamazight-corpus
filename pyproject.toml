@@ -5,6 +5,8 @@ description = "Tamazight Corpus Framework"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
+    "flask>=3.1.3",
+    "flask-wtf>=1.3.0",
     "pyyaml>=6.0.3",
     "scipy>=1.18.0",
     "sounddevice>=0.5.5",

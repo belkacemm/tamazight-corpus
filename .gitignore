@@ -31,3 +31,9 @@ Thumbs.db
 .env.*
 *.key
 *.pem
+
+# Local corpus/data
+datasets/
+
+# Local corpus/data
+temp_test/
