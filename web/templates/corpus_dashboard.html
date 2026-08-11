@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="container mt-4">
+
+    <h1>{{ project.config.name }}</h1>
+
+    <p class="text-muted">
+        Language: {{ project.config.language }}
+    </p>
+
+    <hr>
+
+    <div class="row">
+
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5>Recordings</h5>
+                    <h2>{{ stats.recordings }}</h2>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5>Speakers</h5>
+                    <h2>{{ stats.speakers }}</h2>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5>Duration</h5>
+                    <h2>{{ "%.1f"|format(stats.total_duration) }} s</h2>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

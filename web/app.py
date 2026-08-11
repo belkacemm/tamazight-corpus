@@ -39,13 +39,26 @@ def create_corpus():
             config=config,
         )
 
-        return redirect(url_for("home"))
+        return redirect(url_for("corpus_dashboard", corpus_name=name))
 
     return render_template(
         "create_corpus.html",
         form=form,
     )
 
+@app.route("/corpus/<corpus_name>")
+def corpus_dashboard(corpus_name):
+    corpus_path = DATASETS_DIR / corpus_name
+
+    project = Project.open(corpus_path)
+
+    stats = project.corpus.stats()
+
+    return render_template(
+        "corpus_dashboard.html",
+        project=project,
+        stats=stats,
+    )
 
 if __name__ == "__main__":
     app.run(debug=True)
