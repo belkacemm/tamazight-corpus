@@ -1,12 +1,10 @@
 from pathlib import Path
 
-from ..audio.recorder import Recorder
-from ..audio.recorder_config import RecorderConfig
 from ..io.config_io import ConfigIO
 from ..repositories.file_repository import FileRepository
+from ..repositories.speaker_repository import SpeakerRepository
 from .config import CorpusConfig
 from .corpus import Corpus
-from ..repositories.speaker_repository import SpeakerRepository
 
 
 class Project:
@@ -14,7 +12,13 @@ class Project:
     Represents one corpus project.
     """
 
-    def __init__(self, path: Path, config: CorpusConfig, corpus: Corpus, speakers: SpeakerRepository):
+    def __init__(
+        self,
+        path: Path,
+        config: CorpusConfig,
+        corpus: Corpus,
+        speakers: SpeakerRepository,
+    ):
         self.path = path
         self.config = config
         self.corpus = corpus
@@ -22,36 +26,53 @@ class Project:
 
     @classmethod
     def create(cls, path: Path, config: CorpusConfig):
-
         path.mkdir(parents=True, exist_ok=True)
 
         repository = FileRepository(path)
-
         speaker_repository = SpeakerRepository(path)
 
-        recorder = Recorder(
-            RecorderConfig(sample_rate=config.sample_rate, channels=config.channels)
-        )
-
-        corpus = Corpus(repository=repository, recorder=recorder)
+        corpus = Corpus(repository=repository)
 
         ConfigIO.save(path / "corpus.yaml", config)
 
-        return cls(path=path, config=config, corpus=corpus, speakers=speaker_repository)
+        return cls(
+            path=path,
+            config=config,
+            corpus=corpus,
+            speakers=speaker_repository,
+        )
 
     @classmethod
     def open(cls, path: Path):
-
         config = ConfigIO.load(path / "corpus.yaml")
 
         repository = FileRepository(path)
-
         speaker_repository = SpeakerRepository(path)
 
-        recorder = Recorder(
-            RecorderConfig(sample_rate=config.sample_rate, channels=config.channels)
+        corpus = Corpus(repository=repository)
+
+        return cls(
+            path=path,
+            config=config,
+            corpus=corpus,
+            speakers=speaker_repository,
         )
 
-        corpus = Corpus(repository=repository, recorder=recorder)
+    def enable_recording(self):
+        """
+        Enable microphone recording for this project.
 
-        return cls(path=path, config=config, corpus=corpus, speakers=speaker_repository)
+        The audio recorder is imported only when recording
+        functionality is actually requested.
+        """
+        from ..audio.recorder import Recorder
+        from ..audio.recorder_config import RecorderConfig
+
+        recorder = Recorder(
+            RecorderConfig(
+                sample_rate=self.config.sample_rate,
+                channels=self.config.channels,
+            )
+        )
+
+        self.corpus.recorder = recorder

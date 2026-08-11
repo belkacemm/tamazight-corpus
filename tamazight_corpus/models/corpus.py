@@ -8,7 +8,7 @@ class Corpus:
     Coordinates all corpus operations.
     """
 
-    def __init__(self, repository, recorder):
+    def __init__(self, repository, recorder=None):
         self.repository = repository
         self.recorder = recorder
 
@@ -29,6 +29,9 @@ class Corpus:
         """
         Record one utterance and save it.
         """
+
+        if self.recorder is None:
+            raise RuntimeError("Audio recording is not enabled")
 
         # Generate ID
         recording_id = self.repository.next_recording_id()

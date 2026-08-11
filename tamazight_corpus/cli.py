@@ -158,6 +158,8 @@ def main():
             Path(args.path)
         )
 
+        project.enable_recording()
+
         speaker_id = input(
             "Speaker ID: "
         ).strip()
