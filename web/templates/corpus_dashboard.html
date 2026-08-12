@@ -42,7 +42,13 @@
         </div>
 
     </div>
-
+    <a
+        href="{{ url_for('speakers', 
+    corpus_name=project.config.name) }}"
+        class="btn btn-primary mt-3"
+    >
+        Speakers
+    </a>
 </div>
 
 {% endblock %}

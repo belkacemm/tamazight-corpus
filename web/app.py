@@ -60,5 +60,19 @@ def corpus_dashboard(corpus_name):
         stats=stats,
     )
 
+@app.route("/corpus/<corpus_name>/speakers")
+def speakers(corpus_name):
+    corpus_path = DATASETS_DIR / corpus_name
+
+    project = Project.open(corpus_path)
+
+    speakers = project.speakers.all()
+
+    return render_template(
+        "speakers.html",
+        project=project,
+        speakers=speakers,
+    )
+
 if __name__ == "__main__":
     app.run(debug=True)

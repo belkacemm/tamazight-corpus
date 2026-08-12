@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="container mt-4">
+
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h1>Speakers</h1>
+            <p class="text-muted">
+                {{ project.config.name }}
+            </p>
+        </div>
+
+        <a
+            href="{{ url_for('corpus_dashboard', corpus_name=project.config.name) }}"
+            class="btn btn-secondary"
+        >
+            Back to Dashboard
+        </a>
+    </div>
+
+    <hr>
+
+    {% if speakers %}
+
+    <table class="table table-striped">
+
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+            </tr>
+        </thead>
+
+        <tbody>
+
+            {% for speaker in speakers %}
+
+            <tr>
+                <td>{{ speaker.id }}</td>
+                <td>{{ speaker.name or "" }}</td>
+            </tr>
+
+            {% endfor %}
+
+        </tbody>
+
+    </table>
+
+    {% else %}
+
+    <div class="alert alert-info">
+        No speakers found.
+    </div>
+
+    {% endif %}
+
+</div>
+
+{% endblock %}
