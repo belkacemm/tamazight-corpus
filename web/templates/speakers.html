@@ -13,11 +13,18 @@
         </div>
 
         <a
+            href="{{ url_for('create_speaker', corpus_name=project.config.name) }}"
+                class="btn btn-primary mb-3"
+        >
+                    Add Speaker
+        </a>
+
+        <a
             href="{{ url_for('corpus_dashboard', corpus_name=project.config.name) }}"
             class="btn btn-secondary"
         >
             Back to Dashboard
-        </a>
+        </a>        
     </div>
 
     <hr>
@@ -55,7 +62,7 @@
     </div>
 
     {% endif %}
-
+    
 </div>
 
 {% endblock %}

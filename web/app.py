@@ -1,10 +1,11 @@
 from pathlib import Path
 
 from flask import Flask, render_template, redirect, url_for
-from .forms import CreateCorpusForm
+from .forms import CreateCorpusForm, CreateSpeakerForm
 
 from tamazight_corpus.models.config import CorpusConfig
 from tamazight_corpus.models.project import Project
+from tamazight_corpus.models.speaker import Speaker
 
 
 app = Flask(__name__)
@@ -72,6 +73,48 @@ def speakers(corpus_name):
         "speakers.html",
         project=project,
         speakers=speakers,
+    )
+
+@app.route(
+    "/corpus/<corpus_name>/speakers/create",
+    methods=["GET", "POST"],
+)
+def create_speaker(corpus_name):
+    corpus_path = DATASETS_DIR / corpus_name
+
+    project = Project.open(corpus_path)
+
+    form = CreateSpeakerForm()
+
+    if form.validate_on_submit():
+        speaker_id = form.speaker_id.data.strip()
+        name = form.name.data.strip() or None
+
+        existing = project.speakers.get(speaker_id)
+
+        if existing is not None:
+            form.speaker_id.errors.append(
+                "This speaker ID already exists."
+            )
+        else:
+            speaker = Speaker(
+                id=speaker_id,
+                name=name,
+            )
+
+            project.speakers.create(speaker)
+
+            return redirect(
+                url_for(
+                    "speakers",
+                    corpus_name=corpus_name,
+                )
+            )
+
+    return render_template(
+        "create_speaker.html",
+        form=form,
+        project=project,
     )
 
 if __name__ == "__main__":
