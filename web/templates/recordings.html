@@ -169,8 +169,31 @@
                 </td>
 
                 <td>
-                    {{ recording.transcript.text }}
+                    <form
+                        method="POST"
+                        action="{{ url_for(
+                            'update_transcript',
+                            corpus_name=project.config.name,
+                            recording_id=recording.id
+                        ) }}"
+                    >
+
+                        <textarea
+                            name="transcript"
+                            class="form-control"
+                            rows="2"
+                        >{{ recording.transcript.text }}</textarea>
+
+                        <button
+                            type="submit"
+                            class="btn btn-sm btn-primary mt-2"
+                        >
+                            Save
+                        </button>
+
+                    </form>
                 </td>
+
             </tr>
 
             {% endfor %}

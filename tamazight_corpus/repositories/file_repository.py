@@ -99,6 +99,13 @@ class FileRepository(Repository):
                 ]
             )
 
+    def update_transcript(self, recording_id: str, text: str):
+        """
+        Update the transcript of an existing recording.
+        """
+        path = self.transcript_dir / f"{recording_id}.txt"
+        path.write_text(text, encoding="utf-8")
+
     def load_recordings(self) -> list[Recording]:
         """
         Load all recordings.

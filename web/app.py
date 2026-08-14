@@ -236,5 +236,31 @@ def serve_audio(corpus_name, filename):
         filename
     )
 
+@app.route(
+    "/corpus/<corpus_name>/recording/<recording_id>/transcript",
+    methods=["POST"]
+)
+def update_transcript(corpus_name, recording_id):
+    corpus_path = DATASETS_DIR / corpus_name
+
+    project = Project.open(corpus_path)
+
+    text = request.form.get("transcript", "").strip()
+
+    if not text:
+        return "Transcript is required.", 400
+
+    project.corpus.repository.update_transcript(
+        recording_id,
+        text
+    )
+
+    return redirect(
+        url_for(
+            "upload_audio_page",
+            corpus_name=corpus_name
+        )
+    )
+
 if __name__ == "__main__":
     app.run(debug=True)
