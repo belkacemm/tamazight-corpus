@@ -1,0 +1,412 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="container mt-4">
+
+    <h1>Recordings</h1>
+
+    <p class="text-muted">
+        {{ project.config.name }}
+    </p>
+
+    <hr>
+
+    <div class="mb-4">
+
+        <h4>Record from microphone</h4>
+
+        <button
+            type="button"
+            id="start-recording"
+            class="btn btn-danger"
+        >
+            Start Recording
+        </button>
+
+        <button
+            type="button"
+            id="stop-recording"
+            class="btn btn-secondary"
+            disabled
+        >
+            Stop Recording
+        </button>
+
+        <div class="mt-3">
+            <span id="recording-status">
+                Ready
+            </span>
+        </div>
+
+    </div>
+
+     <h4>Upload an audio file</h4>
+
+    <form
+        method="POST"
+        action="{{ url_for('upload_audio', corpus_name=project.config.name) }}"
+        enctype="multipart/form-data"
+    >
+
+        <div class="mb-3">
+            <label for="speaker_id" class="form-label">
+                Speaker
+            </label>
+
+            <select
+                class="form-select"
+                id="speaker_id"
+                name="speaker_id"
+                required
+            >
+                <option value="">Select speaker</option>
+
+                {% for speaker in speakers %}
+                    <option value="{{ speaker.id }}">
+                        {{ speaker.id }}
+                        {% if speaker.name %}
+                            — {{ speaker.name }}
+                        {% endif %}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="mb-3">
+            <label for="audio" class="form-label">
+                Audio file
+            </label>
+
+            <input
+                type="file"
+                class="form-control"
+                id="audio"
+                name="audio"
+                accept="audio/*"
+                required
+            >
+        </div>
+
+        <div class="mb-3">
+        <label for="transcript" class="form-label">
+            Transcript
+        </label>
+
+        <textarea
+            class="form-control"
+            id="transcript"
+            name="transcript"
+            rows="4"
+            required
+        ></textarea>
+    </div>
+
+        <button
+            type="submit"
+            class="btn btn-primary"
+        >
+            Upload
+        </button>
+
+    </form>
+
+    <hr class="my-5">
+
+    <h2>Recordings</h2>
+
+    {% if recordings %}
+
+    <table class="table table-striped">
+
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Speaker</th>
+                <th>Duration</th>
+                <th>Sample Rate</th>
+                <th>Channels</th>
+                <th>Transcript</th>
+            </tr>
+        </thead>
+
+        <tbody>
+
+            {% for recording in recordings %}
+
+            <tr>
+                <td>{{ recording.id }}</td>
+
+                <td>
+                    {{ recording.speaker.id }}
+                </td>
+
+                <td>
+                    {{ "%.2f"|format(recording.audio.duration) }} s
+                </td>
+
+                <td>
+                    {{ recording.audio.sample_rate }} Hz
+                </td>
+
+                <td>
+                    {{ recording.audio.channels }}
+                </td>
+
+                <td>
+                    {{ recording.transcript.text }}
+                </td>
+            </tr>
+
+            {% endfor %}
+
+        </tbody>
+
+    </table>
+
+    {% else %}
+
+    <div class="alert alert-info">
+        No recordings yet.
+    </div>
+
+    {% endif %}
+
+</div>
+
+<script>
+    let mediaRecorder = null;
+    let audioChunks = [];
+
+    const startButton = document.getElementById("start-recording");
+    const stopButton = document.getElementById("stop-recording");
+    const status = document.getElementById("recording-status");
+
+    startButton.addEventListener("click", async () => {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({
+                audio: true
+            });
+
+            audioChunks = [];
+
+            let options = {};
+
+            if (MediaRecorder.isTypeSupported("audio/webm;codecs=opus")) {
+                options.mimeType = "audio/webm;codecs=opus";
+            } else if (MediaRecorder.isTypeSupported("audio/ogg;codecs=opus")) {
+                options.mimeType = "audio/ogg;codecs=opus";
+            }
+
+            mediaRecorder = new MediaRecorder(stream, options);
+
+            console.log("Selected MIME type:", mediaRecorder.mimeType);
+
+            console.log("MediaRecorder MIME type: ", mediaRecorder.mimeType);
+
+            mediaRecorder.addEventListener("dataavailable", event => {
+                if (event.data.size > 0) {
+                    audioChunks.push(event.data);
+                }
+            });
+
+            mediaRecorder.addEventListener("start", () => {
+                status.textContent = "Recording...";
+                startButton.disabled = true;
+                stopButton.disabled = false;
+            });
+
+            mediaRecorder.addEventListener("stop", async () => {
+                stream.getTracks().forEach(track => track.stop());
+
+                status.textContent = "Preparing upload...";
+
+                const audioBlob = new Blob(audioChunks,{type: mediaRecorder.mimeType});
+
+                const wavBlob = await convertToWav(
+                    audioBlob
+                );
+
+                console.log(
+                    "WAV type:",
+                    wavBlob.type
+                );
+
+                console.log(
+                    "WAV size:",
+                    wavBlob.size
+                );
+
+                console.log("Blob type:",audioBlob.type);
+                console.log("Blob size:",audioBlob.size);   
+
+                const formData = new FormData();
+
+               const speakerId = document.getElementById(
+                    "speaker_id"
+                ).value;
+
+                const transcript = document.getElementById(
+                    "transcript"
+                ).value.trim();
+
+                formData.append(
+                    "speaker_id",
+                    speakerId
+                );
+
+                formData.append(
+                    "transcript",
+                    transcript
+                );
+
+                formData.append(
+                    "audio",
+                    wavBlob,
+                    "browser-recording.wav"
+                );
+
+                const response = await fetch(
+                    "{{ url_for('upload_audio', corpus_name=project.config.name) }}",
+                    {
+                        method: "POST",
+                        body: formData
+                    }
+                );
+
+                const result = await response.text();
+
+                status.innerHTML = result;
+
+                startButton.disabled = false;
+                stopButton.disabled = true;
+            });
+
+            mediaRecorder.start();
+
+        } catch (error) {
+            console.error(error);
+            status.textContent = "Microphone access failed.";
+        }
+    });
+
+    stopButton.addEventListener("click", () => {
+        if (
+            mediaRecorder &&
+            mediaRecorder.state !== "inactive"
+        ) {
+            mediaRecorder.stop();
+        }
+    });
+
+    function encodeWav(samples, sampleRate) {
+    const buffer = new ArrayBuffer(44 + samples.length * 2);
+    const view = new DataView(buffer);
+
+    function writeString(offset, string) {
+        for (let i = 0; i < string.length; i++) {
+            view.setUint8(offset + i, string.charCodeAt(i));
+        }
+    }
+
+    writeString(0, "RIFF");
+    view.setUint32(4, 36 + samples.length * 2, true);
+    writeString(8, "WAVE");
+
+    writeString(12, "fmt ");
+    view.setUint32(16, 16, true);
+    view.setUint16(20, 1, true);       // PCM
+    view.setUint16(22, 1, true);       // mono
+    view.setUint32(24, sampleRate, true);
+    view.setUint32(28, sampleRate * 2, true);
+    view.setUint16(32, 2, true);
+    view.setUint16(34, 16, true);
+
+    writeString(36, "data");
+    view.setUint32(40, samples.length * 2, true);
+
+    let offset = 44;
+
+    for (let i = 0; i < samples.length; i++) {
+        const sample = Math.max(-1, Math.min(1, samples[i]));
+
+        const value =
+            sample < 0
+                ? sample * 0x8000
+                : sample * 0x7fff;
+
+        view.setInt16(offset, value, true);
+        offset += 2;
+    }
+
+    return new Blob(
+        [view],
+        { type: "audio/wav" }
+    );
+}
+
+async function convertToWav(audioBlob) {
+    const arrayBuffer = await audioBlob.arrayBuffer();
+
+    const audioContext = new AudioContext();
+
+    const audioBuffer =
+        await audioContext.decodeAudioData(arrayBuffer);
+
+    const inputSampleRate =
+        audioBuffer.sampleRate;
+
+    const inputChannels =
+        audioBuffer.numberOfChannels;
+
+    console.log(
+        "Input sample rate:",
+        inputSampleRate
+    );
+
+    console.log(
+        "Input channels:",
+        inputChannels
+    );
+
+    const targetSampleRate = 16000;
+
+    const duration = audioBuffer.duration;
+
+    const targetLength =
+        Math.floor(duration * targetSampleRate);
+
+    const offlineContext =
+        new OfflineAudioContext(
+            1,
+            targetLength,
+            targetSampleRate
+        );
+
+    const source =
+        offlineContext.createBufferSource();
+
+    source.buffer = audioBuffer;
+
+    source.connect(
+        offlineContext.destination
+    );
+
+    source.start(0);
+
+    const renderedBuffer =
+        await offlineContext.startRendering();
+
+    const samples =
+        renderedBuffer.getChannelData(0);
+
+    return encodeWav(
+        samples,
+        targetSampleRate
+    );
+}
+
+
+</script>
+
+{% endblock %}

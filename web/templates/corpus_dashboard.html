@@ -49,6 +49,13 @@
     >
         Speakers
     </a>
+
+    <a
+        href="{{ url_for('upload_audio_page', corpus_name=project.config.name) }}"
+        class="btn btn-primary mt-3"
+    >
+        Recordings
+    </a>
 </div>
 
 {% endblock %}
