@@ -126,6 +126,7 @@
                 <th>Duration</th>
                 <th>Sample Rate</th>
                 <th>Channels</th>
+                <th>Audio</th>
                 <th>Transcript</th>
             </tr>
         </thead>
@@ -151,6 +152,20 @@
 
                 <td>
                     {{ recording.audio.channels }}
+                </td>
+
+                <td>
+                    <audio controls>
+                        <source
+                            src="{{ url_for(
+                                'serve_audio',
+                                corpus_name=project.config.name,
+                                filename=recording.audio.path.name
+                            ) }}"
+                            type="audio/wav"
+                        >
+                        Your browser does not support audio playback.
+                    </audio>
                 </td>
 
                 <td>

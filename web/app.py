@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from flask import Flask, render_template, redirect, url_for, request
+from flask import Flask, render_template, redirect, url_for, request, send_from_directory
 from .forms import CreateCorpusForm, CreateSpeakerForm
 
 from tamazight_corpus.models.config import CorpusConfig
@@ -226,6 +226,15 @@ def upload_audio_page(corpus_name):
         recordings=recordings,
     )
 
+@app.route("/corpus/<corpus_name>/audio/<filename>")
+def serve_audio(corpus_name, filename):
+    corpus_path = DATASETS_DIR / corpus_name
+    audio_dir = corpus_path / "audio"
+
+    return send_from_directory(
+        audio_dir,
+        filename
+    )
 
 if __name__ == "__main__":
     app.run(debug=True)
