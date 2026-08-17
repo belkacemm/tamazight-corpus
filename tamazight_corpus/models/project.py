@@ -3,6 +3,8 @@ from pathlib import Path
 from ..io.config_io import ConfigIO
 from ..repositories.file_repository import FileRepository
 from ..repositories.speaker_repository import SpeakerRepository
+from ..repositories.supabase_repository import SupabaseRepository
+from ..repositories.supabase_speaker_repository import SupabaseSpeakerRepository
 from .config import CorpusConfig
 from .corpus import Corpus
 
@@ -17,7 +19,7 @@ class Project:
         path: Path,
         config: CorpusConfig,
         corpus: Corpus,
-        speakers: SpeakerRepository,
+        speakers,
     ):
         self.path = path
         self.config = config
@@ -25,11 +27,19 @@ class Project:
         self.speakers = speakers
 
     @classmethod
-    def create(cls, path: Path, config: CorpusConfig):
+    def create(cls, path: Path, config: CorpusConfig, storage: str = "local",):
         path.mkdir(parents=True, exist_ok=True)
 
-        repository = FileRepository(path)
-        speaker_repository = SpeakerRepository(path)
+        if storage == "supabase":
+            repository = SupabaseRepository(
+                corpus_name=config.name
+            )
+            speaker_repository = SupabaseSpeakerRepository(
+                corpus_name=config.name
+            )
+        else:
+            repository = FileRepository(path)
+            speaker_repository = SpeakerRepository(path)
 
         corpus = Corpus(repository=repository)
 
@@ -43,11 +53,19 @@ class Project:
         )
 
     @classmethod
-    def open(cls, path: Path):
+    def open(cls, path: Path, storage: str = "local",):
         config = ConfigIO.load(path / "corpus.yaml")
 
-        repository = FileRepository(path)
-        speaker_repository = SpeakerRepository(path)
+        if storage == "supabase":
+            repository = SupabaseRepository(
+                corpus_name=config.name
+            )
+            speaker_repository = SupabaseSpeakerRepository(
+                corpus_name=config.name
+            )
+        else:
+            repository = FileRepository(path)
+            speaker_repository = SpeakerRepository(path)
 
         corpus = Corpus(repository=repository)
 

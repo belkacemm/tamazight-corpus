@@ -37,3 +37,5 @@ datasets/
 
 # Local corpus/data
 temp_test/
+.supabase-project-test/
+.supabse_cache/

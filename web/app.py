@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from flask import Flask, render_template, redirect, url_for, request, send_from_directory
+from flask import Flask, render_template, redirect, url_for, request, send_from_directory, send_file
 from .forms import CreateCorpusForm, CreateSpeakerForm
 
 from tamazight_corpus.models.config import CorpusConfig
@@ -17,7 +17,7 @@ app = Flask(__name__)
 app.config["SECRET_KEY"] = "development-key"
 
 DATASETS_DIR = Path(__file__).resolve().parent.parent / "datasets"
-
+STORAGE = "supabase"
 
 @app.route("/")
 def home():
@@ -42,6 +42,7 @@ def create_corpus():
         Project.create(
             path=corpus_path,
             config=config,
+            storage=STORAGE,
         )
 
         return redirect(url_for("corpus_dashboard", corpus_name=name))
@@ -55,7 +56,7 @@ def create_corpus():
 def corpus_dashboard(corpus_name):
     corpus_path = DATASETS_DIR / corpus_name
 
-    project = Project.open(corpus_path)
+    project = Project.open(corpus_path, storage=STORAGE)
 
     stats = project.corpus.stats()
 
@@ -69,7 +70,7 @@ def corpus_dashboard(corpus_name):
 def speakers(corpus_name):
     corpus_path = DATASETS_DIR / corpus_name
 
-    project = Project.open(corpus_path)
+    project = Project.open(corpus_path, storage=STORAGE)
 
     speakers = project.speakers.all()
 
@@ -86,7 +87,7 @@ def speakers(corpus_name):
 def create_speaker(corpus_name):
     corpus_path = DATASETS_DIR / corpus_name
 
-    project = Project.open(corpus_path)
+    project = Project.open(corpus_path, storage=STORAGE)
 
     form = CreateSpeakerForm()
 
@@ -129,7 +130,7 @@ def create_speaker(corpus_name):
 def upload_audio(corpus_name):
     corpus_path = DATASETS_DIR / corpus_name
 
-    project = Project.open(corpus_path)
+    project = Project.open(corpus_path, storage=STORAGE)
 
     # Get speaker
     speaker_id = request.form.get("speaker_id")
@@ -202,19 +203,13 @@ def upload_audio(corpus_name):
         recording
     )
 
-    return (
-        f"Recording {recording_id} saved.<br>"
-        f"Speaker: {speaker.id}<br>"
-        f"Sample rate: {sample_rate}<br>"
-        f"Channels: {channels}<br>"
-        f"Duration: {duration:.2f} seconds"
-    )    
-
+    return redirect(url_for("upload_audio_page", corpus_name=corpus_name))
+    
 @app.route("/corpus/<corpus_name>/recordings")
 def upload_audio_page(corpus_name):
     corpus_path = DATASETS_DIR / corpus_name
 
-    project = Project.open(corpus_path)
+    project = Project.open(corpus_path, storage=STORAGE)
 
     speakers = project.speakers.all()
     recordings = project.corpus.recordings
@@ -226,14 +221,32 @@ def upload_audio_page(corpus_name):
         recordings=recordings,
     )
 
+
 @app.route("/corpus/<corpus_name>/audio/<filename>")
 def serve_audio(corpus_name, filename):
     corpus_path = DATASETS_DIR / corpus_name
-    audio_dir = corpus_path / "audio"
 
-    return send_from_directory(
-        audio_dir,
-        filename
+    project = Project.open(
+        corpus_path,
+        storage=STORAGE,
+    )
+
+    repository = project.corpus.repository
+
+    audio_path = repository.temp_dir / "audio" / filename
+
+    if not audio_path.exists():
+        repository.storage.download_file(
+            f"audio/{filename}",
+            audio_path,
+        )
+
+    if not audio_path.exists():
+        return "Audio file not found.", 404
+
+    return send_file(
+        audio_path,
+        mimetype="audio/wav",
     )
 
 @app.route(
@@ -243,7 +256,7 @@ def serve_audio(corpus_name, filename):
 def update_transcript(corpus_name, recording_id):
     corpus_path = DATASETS_DIR / corpus_name
 
-    project = Project.open(corpus_path)
+    project = Project.open(corpus_path, storage=STORAGE)
 
     text = request.form.get("transcript", "").strip()
 
