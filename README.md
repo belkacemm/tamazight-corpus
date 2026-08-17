@@ -40,7 +40,7 @@ Persistent storage can be provided by **Supabase Storage**, allowing the applica
 
 ---
 
-# 1. Architecture
+## 1. Architecture
 
 The framework separates the corpus logic from the storage system.
 
@@ -67,7 +67,8 @@ The framework separates the corpus logic from the storage system.
           |                     |
       Local disk          Supabase Storage
 This design allows the same corpus framework to work with different storage backends.
-# 2. Requirements
+
+## 2. Requirements
 
 Python
 Python 3.13 or newer is recommended.
@@ -77,7 +78,8 @@ uv
 The project uses uv for Python environment and dependency management.
 Install uv from:
 https://docs.astral.sh/uv/⁠�
-# 3. Installation
+
+## 3. Installation
 
 Clone the repository:
 git clone https://github.com/belkacemm/tamazight-corpus
@@ -85,7 +87,8 @@ cd tamazight-corpus
 Create the environment and install dependencies:
 uv sync
 The project environment is managed automatically by uv.
-# 4. Command Line Interface
+
+## 4. Command Line Interface
 
 The framework provides a CLI:
 uv run tamazight-corpus --help
@@ -98,7 +101,8 @@ validate
 For example:
 uv run tamazight-corpus init
 The CLI can be used to create and manage corpora without the web application.
-# 5. Web Application
+
+## 5. Web Application
 
 The project also includes a Flask web application.
 The web application is useful for people who want to collect speech data without interacting directly with the Python API.
@@ -107,7 +111,8 @@ From the project root:
 uv run flask --app web.app run
 Then open:
 http://127.0.0.1:5000
-# 6. Creating a Corpus
+
+## 6. Creating a Corpus
 
 Open:
 Create Corpus
@@ -119,7 +124,8 @@ Corpus name: kabyle-test
 Language: Kabyle
 Submit the form.
 The corpus dashboard will then be displayed.
-# 7. Adding Speakers
+
+## 7. Adding Speakers
 
 Open:
 Speakers
@@ -136,7 +142,8 @@ SPK002
 SPK003
 ...
 Each recording is associated with one speaker.
-# 8. Collecting Speech
+
+## 8. Collecting Speech
 
 Open:
 Recordings
@@ -156,7 +163,8 @@ Mono
 before being stored.
 Or upload an existing WAV
 Select an existing WAV file.
-# 9. Adding a Transcript
+
+## 9. Adding a Transcript
 
 Enter the exact transcription of the recording.
 For example:
@@ -165,7 +173,8 @@ The transcript is stored separately from the audio.
 The recording therefore has:
 000001.wav
 000001.txt
-# 10. Recording Information
+
+## 10. Recording Information
 
 For each recording, the framework stores:
 Recording ID
@@ -182,7 +191,8 @@ Sample rate: 16000
 Channels:    1
 Duration:    2.45 seconds
 Transcript:  Azul fellawen
-# 11. Playing Recordings
+
+## 11. Playing Recordings
 
 The recordings page contains an audio player.
 Click:
@@ -190,7 +200,8 @@ Play
 to listen to the recording.
 When Supabase storage is enabled, the WAV is downloaded to a temporary local cache when necessary and then served to the browser.
 The permanent copy remains in Supabase.
-# 12. Persistent Storage with Supabase
+
+## 12. Persistent Storage with Supabase
 
 For production or cloud deployment, Supabase Storage can be used.
 The bucket should be configured as private.
@@ -211,7 +222,8 @@ The corpus is stored approximately as:
     ├── speakers.csv
     └── recordings.csv
 This allows the Flask application to restart without losing the corpus.
-# 13. Supabase Configuration
+
+## 13. Supabase Configuration
 
 Create a Supabase project and a private Storage bucket.
 The application uses two environment variables:
@@ -223,7 +235,8 @@ SUPABASE_KEY=your_supabase_key
 Never commit .env to GitHub.
 Add it to .gitignore:
 .env
-# 14. Render Deployment
+
+## 14. Render Deployment
 
 The Flask application can be deployed to Render.
 Configure the Render service with the required environment variables:
@@ -238,7 +251,8 @@ Upload or record WAV files
 Add transcripts
 Listen to recordings
 Corpus data remains in Supabase after a Render restart or redeployment.
-# 15. Local vs Supabase Storage
+
+## 15. Local vs Supabase Storage
 
 The framework supports two storage approaches.
 Local storage
@@ -258,7 +272,8 @@ Project.create(
 )
 Audio, transcripts, and metadata are stored in Supabase.
 The Flask application currently uses Supabase storage.
-# 16. Developer Usage
+
+## 16. Developer Usage
 
 The framework can also be used directly from Python.
 Example:
@@ -283,7 +298,8 @@ project = Project.create(
     config=config,
     storage="supabase",
 )
-# 17. Creating a Speaker
+
+## 17. Creating a Speaker
 
 from tamazight_corpus.models.speaker import Speaker
 
@@ -297,7 +313,8 @@ Retrieve speakers:
 speakers = project.speakers.all()
 Retrieve one speaker:
 speaker = project.speakers.get("SPK001")
-# 18. Creating a Recording
+
+## 18. Creating a Recording
 
 A recording contains:
 Recording(
@@ -317,7 +334,8 @@ The transcript model contains:
 Transcript(
     text="Azul fellawen",
 )
-# 19. Corpus Structure
+
+## 19. Corpus Structure
 
 A corpus conceptually contains:
 Corpus
@@ -334,7 +352,8 @@ Example:
 000001
 000002
 000003
-# 20. Project Structure
+
+## 20. Project Structure
 
 The main project structure is:
 tamazight-corpus/
@@ -360,13 +379,15 @@ tamazight-corpus/
 ├── pyproject.toml
 ├── README.md
 └── .gitignore
-# 21. Testing
+
+## 21. Testing
 
 Run the test suite with:
 uv run pytest
 Check code quality with:
 uv run ruff check .
-# 22. Why This Framework?
+
+## 22. Why This Framework?
 
 Low-resource languages often lack sufficiently large speech datasets.
 The purpose of this framework is to make it easier to build those datasets.
@@ -381,7 +402,8 @@ Transcript
    ↓
 Metadata
 Thousands of such pairs can eventually be used to train or fine-tune speech recognition models.
-# 23. Example Corpus
+
+## 23. Example Corpus
 
 A speech corpus might eventually contain:
 10 speakers
@@ -392,7 +414,8 @@ A speech corpus might eventually contain:
       +
 1,000 transcripts
 The resulting dataset can then be prepared for machine-learning and ASR experiments.
-# 24. Roadmap
+
+## 24. Roadmap
 
 Planned improvements include:
 Better corpus statistics
@@ -406,7 +429,8 @@ Batch upload
 Dataset preparation for ASR
 Additional storage backends
 Authentication and user management
-# 25. Contributing
+
+## 25. Contributing
 
 Contributions are welcome.
 Possible areas include:
@@ -417,7 +441,9 @@ Audio processing
 Dataset export
 ASR dataset preparation
 Support for additional languages
-# 26. License: MIT License
+
+## 26. License
+This project is licensed under the [MIT License](LICENSE).
 
 # Summary
 
