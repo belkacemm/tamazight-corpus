@@ -39,3 +39,4 @@ datasets/
 temp_test/
 .supabase-project-test/
 .supabse_cache/
+test_publication_corpus/
